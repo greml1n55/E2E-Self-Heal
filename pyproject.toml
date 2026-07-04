@@ -1,0 +1,7 @@
+[project]
+name = "ai-driven-e2e"
+version = "0.1.0"
+description = "LangGraph FastAPI Based AI Driven E2E Checker"
+readme = "README.md"
+requires-python = ">=3.13"
+
