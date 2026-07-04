@@ -10,6 +10,9 @@ logger = structlog.get_logger(__name__)
 _ERROR_RE = re.compile(r"^\s*(Error:.*)$", re.MULTILINE)
 # A test-file source location, e.g. `tests/example.spec.ts:12:34`.
 _LOCATION_RE = re.compile(r"([\w./-]+\.(?:spec|test)\.[jt]sx?):(\d+):(\d+)")
+# The stack-trace failing line, e.g. `at tests/example.spec.ts:12:9` — the line to patch,
+# preferred over the test-header location that appears earlier in the log.
+_AT_LOCATION_RE = re.compile(r"\bat\s+([\w./-]+\.(?:spec|test)\.[jt]sx?):(\d+):(\d+)")
 # Playwright call-log lines, e.g. `- waiting for locator('#submit-btn')`.
 _WAITING_RE = re.compile(r"waiting for (.+)")
 
@@ -27,7 +30,9 @@ def parse_error_log(raw_log: str) -> str:
     if error_match:
         parts.append(error_match.group(1).strip())
 
-    loc_match = _LOCATION_RE.search(raw_log)
+    # Prefer the stack-trace `at ...` line (the actual failing line) over the earlier
+    # test-header location, so the Diagnoser points the patch at the right line.
+    loc_match = _AT_LOCATION_RE.search(raw_log) or _LOCATION_RE.search(raw_log)
     if loc_match:
         parts.append(f"at {loc_match.group(1)}:{loc_match.group(2)}")
 

@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [{ name = "Lee-Dongwook", email = "devgroup2@futureworklab.co.kr" }]
+authors = [{ name = "Lee-Dongwook", email = "dlehddnr0713@gmail.com" }]
 keywords = ["playwright", "e2e", "self-healing", "langgraph", "testing", "llm", "cli"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -56,3 +56,8 @@ line-length = 100
 [tool.pyright]
 pythonVersion = "3.13"
 typeCheckingMode = "standard"
+
+[tool.pytest.ini_options]
+# Collect only the test suite; app/nodes/test_runner.py defines a node fn named
+# `test_runner` that pytest would otherwise mis-collect as a test.
+testpaths = ["tests"]

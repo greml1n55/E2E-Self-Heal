@@ -62,7 +62,9 @@ def _run_helper(url: str, selectors: list[str]) -> dict[str, int]:
         script_path.unlink(missing_ok=True)
 
     if result.returncode != 0:
-        logger.warning("selector_helper_nonzero", returncode=result.returncode, stderr=result.stderr[:500])
+        logger.warning(
+            "selector_helper_nonzero", returncode=result.returncode, stderr=result.stderr[:500]
+        )
         raise RuntimeError("selector_helper_failed")
     return json.loads(result.stdout)
 

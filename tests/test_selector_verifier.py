@@ -15,7 +15,11 @@ PATCHED = "await page.click('#new')\n"
 
 def _instruction(selector: str) -> PatchInstruction:
     return PatchInstruction(
-        line=1, original=ORIGINAL.strip(), replacement=PATCHED.strip(), reason="renamed", selector=selector
+        line=1,
+        original=ORIGINAL.strip(),
+        replacement=PATCHED.strip(),
+        reason="renamed",
+        selector=selector,
     )
 
 

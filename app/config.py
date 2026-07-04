@@ -12,8 +12,12 @@ class Settings(BaseSettings):
         default="https://integrate.api.nvidia.com/v1",
         description="NVIDIA OpenAI-compatible endpoint",
     )
-    nvidia_model: str = Field(default="openai/gpt-oss-120b", description="Structured-Outputs-capable model")
-    nvidia_max_tokens: int = Field(default=4096, description="completion token cap (reasoning models need headroom)")
+    nvidia_model: str = Field(
+        default="openai/gpt-oss-120b", description="Structured-Outputs-capable model"
+    )
+    nvidia_max_tokens: int = Field(
+        default=4096, description="completion token cap (reasoning models need headroom)"
+    )
     max_loops: int = Field(default=3, description="repair loop cap (Router termination)")
     playwright_cmd: str = Field(default="npx playwright test", description="Playwright invocation")
     verify_selectors: bool = Field(
@@ -22,7 +26,9 @@ class Settings(BaseSettings):
     app_url: str = Field(
         default="", description="URL the Selector Verifier loads to check candidate selectors"
     )
-    node_cmd: str = Field(default="node", description="Node.js executable for the selector verifier")
+    node_cmd: str = Field(
+        default="node", description="Node.js executable for the selector verifier"
+    )
     log_level: str = Field(default="INFO")
 
 

@@ -47,7 +47,9 @@ def selector_verifier(state: AgentState) -> dict:
     if not settings.verify_selectors or not settings.app_url:
         return {"verification_report": _SKIPPED}
 
-    instructions = [PatchInstruction(**i) for i in state["patch_instructions"].get("instructions", [])]
+    instructions = [
+        PatchInstruction(**i) for i in state["patch_instructions"].get("instructions", [])
+    ]
     selectors = [i.selector for i in instructions if i.selector]
     if not selectors:
         return {"verification_report": _SKIPPED}

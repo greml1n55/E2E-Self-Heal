@@ -30,7 +30,12 @@ def _initial_state() -> AgentState:
 def _patch_output() -> PatchOutput:
     return PatchOutput(
         instructions=[
-            PatchInstruction(line=1, original=ORIGINAL.strip(), replacement=FIXED.strip(), reason="selector renamed")
+            PatchInstruction(
+                line=1,
+                original=ORIGINAL.strip(),
+                replacement=FIXED.strip(),
+                reason="selector renamed",
+            )
         ]
     )
 
