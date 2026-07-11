@@ -15,8 +15,20 @@ from app.sandbox import SandboxViolation, assert_read_allowed
 
 logger = structlog.get_logger(__name__)
 
-# The "# Page snapshot" section holds a ```yaml ... ``` fenced ARIA tree.
+# Keep ARIA snapshots bounded for LLM context — raw trees can be very large.
+DEFAULT_MAX_SNAPSHOT_CHARS = 2500
+
 _SNAPSHOT_RE = re.compile(r"#\s*Page snapshot\s*```ya?ml\s*\n(.*?)\n```", re.DOTALL)
+
+
+def abstract_snapshot(snapshot: str, max_chars: int = DEFAULT_MAX_SNAPSHOT_CHARS) -> str:
+    """Return a trimmed ARIA snapshot suitable for Diagnoser context, or '' if empty."""
+    text = snapshot.strip()
+    if not text:
+        return ""
+    if len(text) <= max_chars:
+        return text
+    return text[:max_chars] + f"\n... [truncated to {max_chars} chars]"
 
 
 def extract_page_snapshot(error_context_md: str | None) -> str:
