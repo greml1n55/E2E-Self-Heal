@@ -4,6 +4,7 @@ from app.shadow import (
     ShadowRuntime,
     ShadowWorkspace,
 )
+from app.shadow.context import ShadowContext
 from app.shadow.injector import MockInjector
 from app.shadow.runtime import SHADOW_PLACEHOLDER_MESSAGE, run_shadow
 from app.shadow.snapshot_store import SnapshotStore
@@ -62,7 +63,7 @@ def test_shutdown_is_idempotent_without_initialize():
 
 
 def test_context_carries_injected_collaborators(tmp_path):
-    ws = ShadowWorkspace(tmp_path)
+    ws = ShadowWorkspace(ShadowConfig(workspace_dir=str(tmp_path)))
     store = SnapshotStore(ws)
     injector = MockInjector()
     runtime = ShadowRuntime(workspace=ws, snapshot_store=store, injector=injector)
