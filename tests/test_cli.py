@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -7,6 +8,18 @@ from typer.testing import CliRunner
 import app.cli as cli_module
 from app.cli import app
 from app.sandbox import SandboxViolation
+
+_ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def _strip_ansi(text: str) -> str:
+    """Drop ANSI color codes so substring checks survive rich's styled help output.
+
+    Under color (CI forces it), rich splits an option like ``--shadow`` into separately
+    styled spans (``-`` + ``-shadow``), so a raw substring match fails. Stripping the
+    escape codes first makes the assertion terminal-independent.
+    """
+    return _ANSI_RE.sub("", text)
 
 
 @pytest.fixture
@@ -242,14 +255,14 @@ def test_cli_shadow_flag_runs_without_error():
     runner = CliRunner()
     result = runner.invoke(app, ["--shadow"])
     assert result.exit_code == 0
-    assert "Shadow Testing" in result.stderr
+    assert "Shadow Testing" in _strip_ansi(result.stderr)
 
 
 def test_cli_help_documents_shadow_flag():
     runner = CliRunner()
     result = runner.invoke(app, ["--help"])
     assert result.exit_code == 0
-    assert "--shadow" in result.stdout
+    assert "--shadow" in _strip_ansi(result.stdout)
 
 
 def test_cli_suite_passes(monkeypatch):
