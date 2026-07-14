@@ -26,7 +26,7 @@ class MockInjector(IMockInjector):
         self.matched_requests: list[tuple[CapturedRequest, float]] = []
         self.matcher: SnapshotMatcher | None = None
 
-    def inject_mock(self, target: Any, mock_data: Any) -> None:
+    def inject_mock(self, target: Any, mock_data: Any) -> Any:
         """Injects network mocks for the target pattern or page/context.
 
         - If target is a string (e.g. a glob or regex pattern), registers request
@@ -120,8 +120,12 @@ class MockInjector(IMockInjector):
         if inspect.iscoroutinefunction(self.page_or_context.route):
             try:
                 loop = asyncio.get_running_loop()
-                loop.create_task(self.page_or_context.route(pattern, handle_request_async))
+                return loop.create_task(self.page_or_context.route(pattern, handle_request_async))
             except RuntimeError:
-                asyncio.run(self.page_or_context.route(pattern, handle_request_async))
+                raise RuntimeError(
+                    "Cannot register async route on Playwright page/context without a running event loop. "
+                    "Ensure this is called from within an active async event loop."
+                )
         else:
             self.page_or_context.route(pattern, handle_request_sync)
+            return None

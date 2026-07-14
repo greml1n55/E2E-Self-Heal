@@ -1,4 +1,3 @@
-import asyncio
 import base64
 from unittest.mock import AsyncMock, MagicMock
 
@@ -153,8 +152,9 @@ async def test_mock_injector_async_fulfill():
     mock_page.route = async_route
 
     injector = MockInjector(mock_page)
-    injector.inject_mock("**/*", snapshots)
-    await asyncio.sleep(0)
+    task = injector.inject_mock("**/*", snapshots)
+    assert task is not None
+    await task
 
     # Mock route & request for async api
     mock_route = AsyncMock()
@@ -186,8 +186,9 @@ async def test_mock_injector_async_abort_on_no_match():
     mock_page.route = async_route
 
     injector = MockInjector(mock_page)
-    injector.inject_mock("**/*", snapshots)
-    await asyncio.sleep(0)
+    task = injector.inject_mock("**/*", snapshots)
+    assert task is not None
+    await task
 
     mock_route = AsyncMock()
     mock_request = MagicMock()
@@ -201,3 +202,18 @@ async def test_mock_injector_async_abort_on_no_match():
     mock_route.abort.assert_called_once_with("failed")
     assert len(injector.unmatched_requests) == 1
     assert injector.unmatched_requests[0].url == "https://api.example.com/not-found"
+
+
+def test_mock_injector_async_no_loop():
+    # Mock async page where route is a coroutine function
+    mock_page = MagicMock()
+
+    async def async_route(pattern, handler):
+        pass
+
+    mock_page.route = async_route
+
+    injector = MockInjector(mock_page)
+    # Since this test is sync and has no active event loop, inject_mock should raise RuntimeError
+    with pytest.raises(RuntimeError, match="Cannot register async route"):
+        injector.inject_mock("**/*", [])

@@ -111,7 +111,7 @@ class IMockInjector(ABC):
     """Interface for injecting mocked responses into runtime execution."""
 
     @abstractmethod
-    def inject_mock(self, target: str, mock_data: Any) -> None:
+    def inject_mock(self, target: str, mock_data: Any) -> Any:
         """Register a mock response.
 
         Args:
