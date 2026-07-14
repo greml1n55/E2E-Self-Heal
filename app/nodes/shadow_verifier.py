@@ -54,8 +54,8 @@ def shadow_verifier(state: AgentState) -> dict:
         logger.info("shadow_verify_skipped_no_snapshot", snapshot_id=snapshot_id)
         return {"shadow_report": {"ok": True, "skipped": True}}
 
-    # Memoize original and candidate code
-    original_code = test_path.read_text(encoding="utf-8")
+    # Memoize the pre-change code (for rollback atomicity) and the candidate code
+    pre_change_code = test_path.read_text(encoding="utf-8")
     candidate_code = state["current_code"]
 
     # Write the current candidate code to disk so run_shadow can execute it
@@ -67,7 +67,7 @@ def shadow_verifier(state: AgentState) -> dict:
         if not isinstance(result, ShadowRunResult):
             # Fallback if run_shadow returned placeholder string
             logger.info("shadow_verify_skipped_placeholder")
-            atomic_write(test_path, original_code)
+            atomic_write(test_path, pre_change_code)
             return {"shadow_report": {"ok": True, "skipped": True}}
 
         if result.is_success:
@@ -77,13 +77,13 @@ def shadow_verifier(state: AgentState) -> dict:
                 "shadow_report": {"ok": True, "score": result.score},
             }
 
-        # Replay failed: rollback both disk and state to original_code
+        # Replay failed: rollback both disk and state to pre_change_code
         logger.info("shadow_verify_failed", score=result.score)
-        atomic_write(test_path, original_code)
+        atomic_write(test_path, pre_change_code)
 
         next_count = state["loop_count"] + 1
         return {
-            "current_code": original_code,
+            "current_code": pre_change_code,
             "analysis_report": state["analysis_report"] + _shadow_feedback(result),
             "loop_count": next_count,
             "shadow_report": {"ok": False, "score": result.score},
@@ -92,11 +92,11 @@ def shadow_verifier(state: AgentState) -> dict:
     except Exception as e:
         logger.exception("shadow_verify_exception")
         # In case of any exception, revert changes to disk
-        atomic_write(test_path, original_code)
+        atomic_write(test_path, pre_change_code)
 
         next_count = state["loop_count"] + 1
         return {
-            "current_code": original_code,
+            "current_code": pre_change_code,
             "analysis_report": (
                 state["analysis_report"]
                 + f"\n\n[SHADOW VERIFICATION ERROR] Exception occurred during shadow verification: {e}"
