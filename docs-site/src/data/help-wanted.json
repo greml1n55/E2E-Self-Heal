@@ -1,0 +1,51 @@
+[
+  {
+    "title": "Snapshot Store",
+    "description": "Build a content-addressed snapshot store (ISnapshotStore) using payload hashing to deduplicate identical responses.",
+    "issueUrl": "https://github.com/Lee-Dongwook/E2E-Self-Heal/issues/84",
+    "area": "Backend",
+    "difficulty": "medium"
+  },
+  {
+    "title": "Trace Parser",
+    "description": "Add unit tests for the Request Normalizer to cover canonicalization rules (URL, query, header ordering).",
+    "issueUrl": "https://github.com/Lee-Dongwook/E2E-Self-Heal/issues/91",
+    "area": "Backend",
+    "difficulty": "easy"
+  },
+  {
+    "title": "Mock Injector",
+    "description": "Implement a configurable mock injector miss policy: strict, lenient, or record-and-augment.",
+    "issueUrl": "https://github.com/Lee-Dongwook/E2E-Self-Heal/issues/85",
+    "area": "Backend",
+    "difficulty": "medium"
+  },
+  {
+    "title": "Architecture Flow",
+    "description": "Implement the <ArchitectureFlow/> pipeline component visual stages on the docs landing page.",
+    "issueUrl": "https://github.com/Lee-Dongwook/E2E-Self-Heal/issues/51",
+    "area": "Frontend",
+    "difficulty": "easy"
+  },
+  {
+    "title": "Healing Diff",
+    "description": "Implement the <HealingDiff/> side-by-side selector diff comparison component for broken and healed states.",
+    "issueUrl": "https://github.com/Lee-Dongwook/E2E-Self-Heal/issues/52",
+    "area": "Frontend",
+    "difficulty": "medium"
+  },
+  {
+    "title": "Help Wanted Board",
+    "description": "Design a React-based card grid for the documentation site showing open issues and component areas.",
+    "issueUrl": "https://github.com/Lee-Dongwook/E2E-Self-Heal/issues/53",
+    "area": "Frontend",
+    "difficulty": "medium"
+  },
+  {
+    "title": "GitHub Pages Deployment",
+    "description": "Build a GitHub Actions workflow to auto-build and deploy the Docusaurus docs site to GitHub Pages.",
+    "issueUrl": "https://github.com/Lee-Dongwook/E2E-Self-Heal/issues/54",
+    "area": "Frontend",
+    "difficulty": "easy"
+  }
+]

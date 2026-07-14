@@ -5,6 +5,7 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import HomepageFeatures from '@site/src/components/HomepageFeatures';
 import Heading from '@theme/Heading';
+import HelpWantedBoard from '@site/src/components/HelpWantedBoard';
 
 import styles from './index.module.css';
 
@@ -38,7 +39,22 @@ export default function Home(): ReactNode {
       <HomepageHeader />
       <main>
         <HomepageFeatures />
+        
+        <section className={styles.helpWantedSection}>
+          <div className="container">
+            <div className={styles.sectionHeader}>
+              <Heading as="h2" className={styles.sectionTitle}>
+                Help Wanted
+              </Heading>
+              <p className={styles.sectionSubtitle}>
+                Want to help build self-healing test tools? Choose a component area below to find open GitHub issues.
+              </p>
+            </div>
+            <HelpWantedBoard />
+          </div>
+        </section>
       </main>
     </Layout>
   );
 }
+

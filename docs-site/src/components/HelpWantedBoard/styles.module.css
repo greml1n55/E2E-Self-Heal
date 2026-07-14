@@ -1,0 +1,176 @@
+/* Filter Section */
+.boardContainer {
+  margin: var(--eeh-space-8) 0;
+  font-family: var(--eeh-font-sans);
+}
+
+.filterWrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--eeh-space-3);
+  margin-bottom: var(--eeh-space-6);
+  flex-wrap: wrap;
+}
+
+.filterLabel {
+  font-weight: 600;
+  color: var(--eeh-text);
+  font-size: 0.95rem;
+}
+
+.filterButtons {
+  display: flex;
+  gap: var(--eeh-space-2);
+}
+
+.filterButton {
+  background: transparent;
+  border: 1px solid var(--eeh-border);
+  color: var(--eeh-text-muted);
+  padding: var(--eeh-space-2) var(--eeh-space-4);
+  border-radius: var(--eeh-radius-pill);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all var(--eeh-transition);
+}
+
+.filterButton:hover {
+  border-color: var(--ifm-color-primary);
+  color: var(--eeh-text);
+  background-color: rgba(46, 199, 166, 0.05);
+}
+
+.activeFilter {
+  background-color: var(--ifm-color-primary);
+  border-color: var(--ifm-color-primary);
+  color: #0d1117 !important; /* High contrast on brand color */
+  font-weight: 600;
+}
+
+/* Card Grid Layout */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--eeh-space-5);
+}
+
+/* 2 columns for tablet/medium screens */
+@media (min-width: 641px) and (max-width: 996px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 3 columns for desktop/large screens */
+@media (min-width: 997px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Card Styling */
+.card {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--eeh-surface);
+  border: 1px solid var(--eeh-border);
+  border-radius: var(--eeh-radius-md);
+  box-shadow: var(--eeh-shadow-card);
+  padding: var(--eeh-space-5);
+  text-decoration: none !important;
+  color: var(--eeh-text) !important;
+  transition: all var(--eeh-transition);
+  height: 100%;
+}
+
+.card:hover {
+  background-color: var(--eeh-surface-raised);
+  border-color: var(--ifm-color-primary);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.cardHeader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eeh-space-2);
+  margin-bottom: var(--eeh-space-3);
+}
+
+.cardTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--eeh-text);
+  line-height: 1.3;
+}
+
+.badgeRow {
+  display: flex;
+  gap: var(--eeh-space-2);
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: var(--eeh-space-1) var(--eeh-space-2) + 0.125rem;
+  border-radius: var(--eeh-radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Area badge is clean with subtle border and muted text */
+.badgeArea {
+  background-color: rgba(139, 148, 158, 0.1);
+  color: var(--eeh-text-muted);
+  border: 1px solid var(--eeh-border);
+}
+
+/* Difficulty Badges */
+.badgeEasy {
+  background-color: rgba(46, 199, 166, 0.1);
+  color: var(--eeh-diff-easy);
+  border: 1px solid rgba(46, 199, 166, 0.2);
+}
+
+.badgeMedium {
+  background-color: rgba(224, 161, 58, 0.1);
+  color: var(--eeh-diff-medium);
+  border: 1px solid rgba(224, 161, 58, 0.2);
+}
+
+.badgeHard {
+  background-color: rgba(242, 85, 90, 0.1);
+  color: var(--eeh-diff-hard);
+  border: 1px solid rgba(242, 85, 90, 0.2);
+}
+
+.cardDescription {
+  font-size: 0.9rem;
+  color: var(--eeh-text-muted);
+  line-height: 1.5;
+  margin: 0 0 var(--eeh-space-5) 0;
+  flex-grow: 1;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: auto;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+  font-family: var(--eeh-font-mono);
+  transition: transform var(--eeh-transition);
+}
+
+.card:hover .cardFooter {
+  transform: translateX(4px);
+}
+
+.arrowIcon {
+  margin-left: var(--eeh-space-1);
+}
