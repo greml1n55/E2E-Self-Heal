@@ -25,21 +25,25 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from app.config import LLMProvider, settings
 from app.schemas import PatchOutput, ReviewOutput
 
-# Anthropic is an optional dependency: non-Anthropic users don't install langchain-anthropic
-# (nor the anthropic SDK), so importing this module must not require it. The guarded import
-# stays at module top per the imports-at-top rule; provider=anthropic checks it at build time.
+# Anthropic and Ollama are optional dependencies: users who don't use them shouldn't have to
+# install langchain-anthropic / langchain-ollama. The guarded imports stay at module top per
+# the imports-at-top rule; the matching provider branch checks availability at build time.
 try:
     from langchain_anthropic import ChatAnthropic
 except ImportError:  # pragma: no cover - exercised only without the extra installed
     ChatAnthropic = None
 
+try:
+    from langchain_ollama import ChatOllama
+except ImportError:  # pragma: no cover - exercised only without the extra installed
+    ChatOllama = None
+
 logger = structlog.get_logger(__name__)
 
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
 
-# Ollama exposes an OpenAI-compatible endpoint locally and needs no real credential.
-_OLLAMA_DEFAULT_BASE_URL = "http://localhost:11434/v1"
-_OLLAMA_PLACEHOLDER_KEY = "ollama"
+# Ollama runs models locally with no credential; the native endpoint (no OpenAI /v1 path).
+_OLLAMA_DEFAULT_BASE_URL = "http://localhost:11434"
 
 # OpenAI's native Structured Outputs: strict json_schema guarantees the response matches
 # PatchOutput/ReviewOutput exactly (the same mechanism the original beta.parse used). Applied
@@ -166,14 +170,22 @@ def _build_chat_model(provider: LLMProvider) -> BaseChatModel:
         }
         return ChatAnthropic(**params)
     if provider == "ollama":
-        # Ollama's OpenAI-compatible endpoint is local and needs no real credential.
+        if ChatOllama is None:
+            raise RuntimeError(
+                "provider=ollama requires the optional 'ollama' extra: "
+                'install it with pip install "ai-driven-e2e[ollama]"'
+            )
+        # Fully local, no API key. Ollama's native structured output (format=<json schema>,
+        # the default with_structured_output method) validates against PatchOutput/ReviewOutput;
+        # a parse/validation failure raises out of structured() so tenacity retries and, on
+        # exhaustion, the Patch Generator feedback loop kicks in (local models are less reliable
+        # at strict JSON). num_predict is Ollama's token-cap name.
         params = {
             "model": settings.llm_model,
             "base_url": settings.llm_base_url or _OLLAMA_DEFAULT_BASE_URL,
-            "api_key": settings.llm_api_key or _OLLAMA_PLACEHOLDER_KEY,
-            "max_tokens": settings.llm_max_tokens,
+            "num_predict": settings.llm_max_tokens,
         }
-        return ChatOpenAI(**params)
+        return ChatOllama(**params)
     if provider == "openai":
         # Native OpenAI. base_url stays empty for api.openai.com, or points at an
         # Azure / OpenAI-compatible endpoint via E2E_HEALER_LLM_BASE_URL.

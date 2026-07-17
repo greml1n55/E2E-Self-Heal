@@ -268,6 +268,26 @@ ANTHROPIC_API_KEY=sk-ant-...     # or E2E_HEALER_LLM_API_KEY=sk-ant-...
 E2E_HEALER_LLM_MODEL=claude-sonnet-4-6
 ```
 
+### Using Ollama (local, offline)
+
+Run fully offline with **no API key**. Ollama is an optional dependency:
+
+```bash
+pip install "ai-driven-e2e[ollama]"      # or: uv sync --extra ollama
+```
+
+Start Ollama and pull a model, then point the provider at it. Structured outputs use
+Ollama's **native JSON-schema `format`**, so pick a model that handles structured output
+well — recommended: `llama3.1`, `qwen2.5-coder`, or `mistral-nemo`. Smaller/older models are
+less reliable at strict JSON; on a parse failure the engine retries and falls back to the
+Patch Generator feedback loop.
+
+```bash
+E2E_HEALER_LLM_PROVIDER=ollama
+E2E_HEALER_LLM_MODEL=llama3.1
+# E2E_HEALER_LLM_BASE_URL=http://localhost:11434   # default; override for a remote host
+```
+
 | Variable                       | Default                               | Purpose                                        |
 | ------------------------------ | ------------------------------------- | ---------------------------------------------- |
 | `E2E_HEALER_LLM_PROVIDER`      | `nvidia`                              | LLM backend: `nvidia`, `openai`, `anthropic`, `ollama` |

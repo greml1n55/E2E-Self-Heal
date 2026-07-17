@@ -8,6 +8,7 @@ from typing import cast
 
 import pytest
 from langchain_anthropic import ChatAnthropic
+from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 from pydantic import SecretStr
 
@@ -94,12 +95,41 @@ def test_factory_ollama_needs_no_key(monkeypatch):
     monkeypatch.setattr(settings, "llm_provider", "ollama")
     monkeypatch.setattr(settings, "llm_api_key", "")
     monkeypatch.setattr(settings, "llm_base_url", "")
-    monkeypatch.setattr(settings, "llm_model", "llama3")
+    monkeypatch.setattr(settings, "llm_model", "llama3.1")
 
     model = llm._build_chat_model("ollama")
 
-    assert isinstance(model, ChatOpenAI)
-    assert str(model.openai_api_base) == "http://localhost:11434/v1"
+    assert isinstance(model, ChatOllama)
+    assert model.base_url == "http://localhost:11434"
+    assert model.model == "llama3.1"
+
+
+def test_factory_ollama_honors_base_url_override(monkeypatch):
+    monkeypatch.setattr(settings, "llm_provider", "ollama")
+    monkeypatch.setattr(settings, "llm_api_key", "")
+    monkeypatch.setattr(settings, "llm_base_url", "http://remote-ollama:11434")
+    monkeypatch.setattr(settings, "llm_model", "qwen2.5-coder")
+
+    model = llm._build_chat_model("ollama")
+
+    assert isinstance(model, ChatOllama)
+    assert model.base_url == "http://remote-ollama:11434"
+
+
+def test_ollama_missing_extra_raises(monkeypatch):
+    # When langchain-ollama isn't installed, provider=ollama must fail with an install hint.
+    monkeypatch.setattr(settings, "llm_provider", "ollama")
+    monkeypatch.setattr(settings, "llm_model", "llama3.1")
+    monkeypatch.setattr(llm, "ChatOllama", None)
+
+    with pytest.raises(RuntimeError, match=r"ollama\]"):
+        llm._build_chat_model("ollama")
+
+
+def test_ollama_uses_default_native_json_schema():
+    # Ollama uses its native format=<schema> (default with_structured_output method),
+    # not the OpenAI strict-schema kwargs which its client doesn't accept.
+    assert "ollama" not in llm._STRICT_SCHEMA_PROVIDERS
 
 
 def test_factory_builds_openai_client_with_base_url_override(monkeypatch):

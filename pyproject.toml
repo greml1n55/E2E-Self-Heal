@@ -51,6 +51,10 @@ dev = [
     "pytest>=8.2",
     "pytest-cov>=5.0",
     "langchain-anthropic>=1.0",  # keep installed so the Anthropic provider is tested
+    "langchain-ollama>=1.0",  # keep installed so the Ollama provider is tested
+]
+ollama = [
+    "langchain-ollama>=1.0",
 ]
 
 [build-system]
