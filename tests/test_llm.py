@@ -4,9 +4,12 @@ Also covers the provider-agnostic factory: the right chat model is built from
 ``settings.llm_provider`` and a missing key fails loudly for key-requiring providers.
 """
 
+from typing import cast
+
 import pytest
 from langchain_anthropic import ChatAnthropic
 from langchain_openai import ChatOpenAI
+from pydantic import SecretStr
 
 from app import llm
 from app.config import settings
@@ -63,13 +66,68 @@ def test_factory_ollama_needs_no_key(monkeypatch):
     assert str(model.openai_api_base) == "http://localhost:11434/v1"
 
 
+def test_factory_builds_openai_client_with_base_url_override(monkeypatch):
+    monkeypatch.setattr(settings, "llm_provider", "openai")
+    monkeypatch.setattr(settings, "llm_api_key", "sk-test")
+    monkeypatch.setattr(settings, "llm_base_url", "https://azure.example.com/v1")
+    monkeypatch.setattr(settings, "llm_model", "gpt-4o-mini")
+
+    model = llm._build_chat_model("openai")
+
+    assert isinstance(model, ChatOpenAI)
+    assert model.model_name == "gpt-4o-mini"
+    assert str(model.openai_api_base) == "https://azure.example.com/v1"
+
+
+def test_openai_falls_back_to_standard_openai_api_key(monkeypatch):
+    monkeypatch.setattr(settings, "llm_provider", "openai")
+    monkeypatch.setattr(settings, "llm_api_key", "")  # generic var unset
+    monkeypatch.setattr(settings, "llm_base_url", "")
+    monkeypatch.setattr(settings, "llm_model", "gpt-4o-mini")
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-from-env")
+
+    model = llm._build_chat_model("openai")
+
+    assert isinstance(model, ChatOpenAI)
+    assert cast(SecretStr, model.openai_api_key).get_secret_value() == "sk-from-env"
+
+
+def test_openai_missing_key_raises(monkeypatch):
+    monkeypatch.setattr(settings, "llm_provider", "openai")
+    monkeypatch.setattr(settings, "llm_api_key", "")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    with pytest.raises(RuntimeError, match="OPENAI_API_KEY"):
+        llm._build_chat_model("openai")
+
+
+def test_openai_and_nvidia_use_strict_json_schema():
+    # OpenAI + NVIDIA get native strict Structured Outputs; other providers use the default.
+    captured: dict[str, object] = {}
+
+    class _FakeStructured:
+        def invoke(self, _messages):
+            return llm.PatchOutput(instructions=[])
+
+    class _FakeModel:
+        def with_structured_output(self, _schema, **kwargs):
+            captured.update(kwargs)
+            return _FakeStructured()
+
+    client = llm.LangChainClient(_FakeModel(), llm._STRICT_JSON_SCHEMA)  # type: ignore[arg-type]
+    result = client.structured("sys", "usr", llm.PatchOutput)
+
+    assert isinstance(result, llm.PatchOutput)
+    assert captured == {"method": "json_schema", "strict": True}
+
+
 def test_structured_raises_on_none_parse():
     class _FakeStructured:
         def invoke(self, _messages):
             return None
 
     class _FakeModel:
-        def with_structured_output(self, _schema):
+        def with_structured_output(self, _schema, **_kwargs):
             return _FakeStructured()
 
     client = llm.LangChainClient(_FakeModel())  # type: ignore[arg-type]

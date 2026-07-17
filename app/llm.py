@@ -11,6 +11,7 @@ completions are given explicit token headroom (``settings.llm_max_tokens``) to l
 for its reasoning content.
 """
 
+import os
 from functools import lru_cache
 from typing import Any, Protocol, TypeVar
 
@@ -32,6 +33,12 @@ SchemaT = TypeVar("SchemaT", bound=BaseModel)
 # Ollama exposes an OpenAI-compatible endpoint locally and needs no real credential.
 _OLLAMA_DEFAULT_BASE_URL = "http://localhost:11434/v1"
 _OLLAMA_PLACEHOLDER_KEY = "ollama"
+
+# OpenAI's native Structured Outputs: strict json_schema guarantees the response matches
+# PatchOutput/ReviewOutput exactly (the same mechanism the original beta.parse used). Applied
+# to the OpenAI-SDK-driven providers; other backends fall back to their default method.
+_STRICT_JSON_SCHEMA: dict[str, Any] = {"method": "json_schema", "strict": True}
+_STRICT_SCHEMA_PROVIDERS: frozenset[str] = frozenset({"openai", "nvidia"})
 
 
 class LLMClient(Protocol):
@@ -66,8 +73,13 @@ class LangChainClient:
     regardless of backend.
     """
 
-    def __init__(self, model: BaseChatModel) -> None:
+    def __init__(
+        self, model: BaseChatModel, structured_kwargs: dict[str, Any] | None = None
+    ) -> None:
         self._model = model
+        # Per-provider Structured Outputs tuning (e.g. OpenAI/NVIDIA use strict json_schema,
+        # which is OpenAI's native Structured Outputs). Empty = the model's default method.
+        self._structured_kwargs = structured_kwargs or {}
 
     def complete(self, system_prompt: str, user_prompt: str) -> str:
         messages = [("system", system_prompt), ("human", user_prompt)]
@@ -80,7 +92,8 @@ class LangChainClient:
 
     def structured(self, system_prompt: str, user_prompt: str, schema: type[SchemaT]) -> SchemaT:
         messages = [("system", system_prompt), ("human", user_prompt)]
-        parsed = self._model.with_structured_output(schema).invoke(messages)
+        runnable = self._model.with_structured_output(schema, **self._structured_kwargs)
+        parsed = runnable.invoke(messages)
         if not isinstance(parsed, schema):
             logger.warning("llm_returned_no_parsed_output", schema=schema.__name__)
             raise ValueError("llm_returned_no_parsed_output")
@@ -94,6 +107,20 @@ def _require_key() -> str:
             "E2E_HEALER_LLM_API_KEY is not set for provider=" + settings.llm_provider
         )
     return settings.llm_api_key
+
+
+def _openai_api_key() -> str:
+    """OpenAI key: prefer the generic setting, else the standard ``OPENAI_API_KEY`` env var.
+
+    Lets a user with an existing ``OPENAI_API_KEY`` drop in without duplicating it under the
+    ``E2E_HEALER_`` prefix.
+    """
+    key = settings.llm_api_key or os.environ.get("OPENAI_API_KEY", "")
+    if not key:
+        raise RuntimeError(
+            "E2E_HEALER_LLM_API_KEY or OPENAI_API_KEY is not set for provider=openai"
+        )
+    return key
 
 
 def _build_chat_model(provider: LLMProvider) -> BaseChatModel:
@@ -118,8 +145,18 @@ def _build_chat_model(provider: LLMProvider) -> BaseChatModel:
             "max_tokens": settings.llm_max_tokens,
         }
         return ChatOpenAI(**params)
-    # nvidia + openai are both driven by the OpenAI SDK. nvidia needs an explicit
-    # base_url; openai falls back to the SDK default when llm_base_url is empty.
+    if provider == "openai":
+        # Native OpenAI. base_url stays empty for api.openai.com, or points at an
+        # Azure / OpenAI-compatible endpoint via E2E_HEALER_LLM_BASE_URL.
+        params = {
+            "model": settings.llm_model,
+            "api_key": _openai_api_key(),
+            "base_url": settings.llm_base_url or None,
+            "max_tokens": settings.llm_max_tokens,
+        }
+        return ChatOpenAI(**params)
+    # nvidia: OpenAI-compatible NIM endpoint driven by the OpenAI SDK; needs an explicit
+    # base_url (folded in from the legacy nvidia_* settings by the config layer).
     params = {
         "model": settings.llm_model,
         "api_key": _require_key(),
@@ -137,7 +174,9 @@ def _get_client() -> LLMClient:
     ``--help``; deferring it here keeps import side-effect-free and fails only when the
     LLM is actually called without a key configured.
     """
-    return LangChainClient(_build_chat_model(settings.llm_provider))
+    provider = settings.llm_provider
+    structured_kwargs = _STRICT_JSON_SCHEMA if provider in _STRICT_SCHEMA_PROVIDERS else {}
+    return LangChainClient(_build_chat_model(provider), structured_kwargs)
 
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))

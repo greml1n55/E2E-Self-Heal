@@ -236,6 +236,19 @@ configure it via the generic `LLM_*` vars. The legacy `NVIDIA_*` vars still work
 the provider is `nvidia` they are folded into the generic ones, so existing setups need no
 changes.
 
+### Using OpenAI
+
+Set the provider to `openai` and supply a key — either the generic `E2E_HEALER_LLM_API_KEY`
+or an existing standard `OPENAI_API_KEY` (used as a fallback). Patch/review use OpenAI's
+native strict Structured Outputs. Point `E2E_HEALER_LLM_BASE_URL` at an Azure or
+OpenAI-compatible endpoint to override the default.
+
+```bash
+E2E_HEALER_LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-...            # or E2E_HEALER_LLM_API_KEY=sk-...
+E2E_HEALER_LLM_MODEL=gpt-4o-mini
+```
+
 | Variable                       | Default                               | Purpose                                        |
 | ------------------------------ | ------------------------------------- | ---------------------------------------------- |
 | `E2E_HEALER_LLM_PROVIDER`      | `nvidia`                              | LLM backend: `nvidia`, `openai`, `anthropic`, `ollama` |
