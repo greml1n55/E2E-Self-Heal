@@ -1,0 +1,14 @@
+.contentContainer { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+.mainContent { display: flex; flex-direction: column; gap: 3rem; }
+.hero { text-align: center; padding: 4rem 0; }
+.heroTitle { font-size: 3rem; color: #1a1a1a; margin-bottom: 1rem; }
+.heroSubtitle { font-size: 1.25rem; color: #666; margin-bottom: 2rem; }
+.heroActions { display: flex; justify-content: center; gap: 1rem; }
+.ctaButton { padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: bold; text-decoration: none; border: none; }
+.ctaPrimary { background-color: #25c2a0; color: #ffffff; }
+.ctaSecondary { background-color: transparent; border: 1px solid #25c2a0; color: #25c2a0; }
+.features { padding: 3rem 0; }
+.featuresGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+.featureCard { padding: 2rem; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #eaeaea; }
+.featureTitle { font-size: 1.5rem; margin-bottom: 0.75rem; color: #1a1a1a; }
+.featureText { color: #666; line-height: 1.6; }
